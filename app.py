@@ -223,28 +223,38 @@ def show_evaluation(samples):
     st.divider()
     b_prev, b_mid, b_next = st.columns([1, 2, 1])
 
-    if b_prev.button("⬅️ Previous", disabled=idx==0):
-        if is_complete: save_rating(uid, sample, ratings)
+    # 1. Previous Button
+    if b_prev.button("⬅️ Previous", disabled=idx==0, use_container_width=True):
+        if is_complete:
+            save_rating(uid, sample, ratings)
         st.session_state['current_index'] = max(0, idx - 1)
         save_progress(uid, st.session_state['current_index'])
         st.rerun()
 
-    if b_mid.button("💾 Save (Stay on page)", disabled=not is_complete):
-        save_rating(uid, sample, ratings)
-        st.toast("Saved!", icon="✅")
+    # 2. Save Button
+    if b_mid.button("💾 Save (Stay)", use_container_width=True):
+        if is_complete:
+            save_rating(uid, sample, ratings)
+            st.toast("Saved successfully!", icon="✅")
+        else:
+            st.warning("Please fill all metrics to save this sample.")
 
     if idx < len(samples) - 1:
-        if b_next.button("Next ➡️", type="primary"):
-            if not is_complete:
-                st.error("Please rate all criteria.")
-            else:
+        # Change label based on whether metrics are filled
+        next_label = "Next ➡️" if is_complete else "Skip ⏩"
+        next_type = "primary" if is_complete else "secondary"
+        
+        if b_next.button(next_label, type=next_type, use_container_width=True):
+            if is_complete:
                 save_rating(uid, sample, ratings)
-                st.session_state['current_index'] = idx + 1
-                save_progress(uid, idx + 1)
-                st.rerun()
+            
+            st.session_state['current_index'] = idx + 1
+            save_progress(uid, idx + 1)
+            st.rerun()
     else:
-        if b_next.button("Finish 🏁", type="primary", disabled=not is_complete):
-            save_rating(uid, sample, ratings)
+        if b_next.button("Finish 🏁", type="primary", use_container_width=True):
+            if is_complete:
+                save_rating(uid, sample, ratings)
             st.balloons()
             st.success("Study Complete! You can close this tab.")
             st.stop()
